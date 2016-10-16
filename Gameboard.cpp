@@ -162,15 +162,14 @@ public:
 			}
 
 			if (p.y == LLONG_MAX && delta.y == 1){
-				cout<<"HELP";
-				newY == LLONG_MIN;
+				newY = LLONG_MIN;
 			} else if (p.y == LLONG_MIN && delta.y == -1){
-				newY == LLONG_MAX;
+				newY = LLONG_MAX;
 			} else {
 				newY = p.y + delta.y;
 			}
-			cout << newX << " " << newY <<"\n";
-			neighbors.insert(Point(newX, newY));
+			bool result = neighbors.insert(Point(newX, newY)).second;
+			assert(result);
 		}
 		return neighbors;
 	}
@@ -203,7 +202,7 @@ int main(int argc, char *argv[]){
 	// testGameboard->toggleBit(Point(1, 2), OFF);
 
 	testGameboard->toggleBit(Point(LLONG_MAX, LLONG_MAX), ON);
-	//testGameboard->toggleBit(Point(LLONG_MIN, LLONG_MIN), ON);
+	testGameboard->toggleBit(Point(LLONG_MIN, LLONG_MIN), ON);
 	std::cout << "My neighbors look like: \n";
 	for(const auto& neighbor: testGameboard->neighborCount){
 		Point point = neighbor.first;
