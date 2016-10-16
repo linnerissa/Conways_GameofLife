@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+#include <math.h>
+#include <limits.h>
 
 using namespace std;
 
@@ -18,7 +20,7 @@ class Point{
   		std::int64_t y;
 
 		Point(): x(0), y(0) {}
-		Point(int x, int y) : x(x), y(y) {}
+		Point(int64_t x, int64_t y) : x(x), y(y) {}
 
 	bool operator==(Point const& other) const{ 
 		return (x == other.x && y == other.y);
@@ -82,51 +84,51 @@ public:
 	*/
 	int toggleBit(Point p, int action){
 		//Remeber to do boundary checking on the x and y's for overflow
-		for (const Point& delta: deltaNeighbors) {
-			int64_t newX = p.x + delta.x;
-			int64_t newY = p.y + delta.y;
-			Point newP = Point(newX, newY);
+		std::unordered_set<Point> neighborPoints = neighbors(p);
+		for (const Point& newPoint: neighborPoints) {
+			int64_t newX = newPoint.x;
+			int64_t newY = newPoint.y;
 			
-			if (neighborCount.find(newP) != neighborCount.end()){
+			if (neighborCount.find(newPoint) != neighborCount.end()){
 				//Remove from changelist and or add to changelist as off:
-				if (neighborCount.at(newP) == MAGICNUMBER){
+				if (neighborCount.at(newPoint) == MAGICNUMBER){
 
-					if (changelist.find(newP) != changelist.end()){
-						changelist.erase(newP);
-					} else if (currentlyOn.find(newP) != currentlyOn.end()){
-						changelist[newP] = OFF;
+					if (changelist.find(newPoint) != changelist.end()){
+						changelist.erase(newPoint);
+					} else if (currentlyOn.find(newPoint) != currentlyOn.end()){
+						changelist[newPoint] = OFF;
 					} else {
 						//Should not have a case where its neither on changelist or on currentlyon
 						cout<<"ERROR\n";
 					}
 
-					neighborCount.at(newP) += action;
+					neighborCount.at(newPoint) += action;
 
 				} else {
-					neighborCount.at(newP) += action;
-					if (neighborCount.at(newP) == 3){
+					neighborCount.at(newPoint) += action;
+					if (neighborCount.at(newPoint) == 3){
 						
-						if (currentlyOn.find(newP) != currentlyOn.end()){
+						if (currentlyOn.find(newPoint) != currentlyOn.end()){
 							//IS CURRENTLY ON
-							if (changelist.at(newP) == OFF){
-								changelist.erase(newP);
+							if (changelist.at(newPoint) == OFF){
+								changelist.erase(newPoint);
 							}
 						}
 
-						if (currentlyOn.find(newP) == currentlyOn.end()){
+						if (currentlyOn.find(newPoint) == currentlyOn.end()){
 							//not already on, need to make changes to it
-							changelist[newP] =  ON;
+							changelist[newPoint] =  ON;
 						}
 
-					} else if (neighborCount.at(newP) == 0){
-						neighborCount.erase(newP);
+					} else if (neighborCount.at(newPoint) == 0){
+						neighborCount.erase(newPoint);
 					}
 				}
 
 			} else {
 				//Doesnt exist in neighborCount yet:
 				assert(action != OFF);
-				neighborCount[newP] = 1;
+				neighborCount[newPoint] = 1;
 			}
 		}
 
@@ -151,22 +153,23 @@ public:
 		int64_t newX, newY;
 
 		for (const Point& delta: deltaNeighbors){
-			if (p.x == (2^63 - 1) && delta.x == 1){
-				newX = -2^63;
-			} else if ((p.x == -2^63) and delta.x == -1){
-				newX = 2^63 - 1;
+			if (p.x == LLONG_MAX && delta.x == 1){
+				newX = LLONG_MIN;
+			} else if (p.x == LLONG_MIN && delta.x == -1){
+				newX = LLONG_MAX;
 			} else {
 				newX = p.x + delta.x;
 			}
 
-			if (p.y == (2^63 - 1) && delta.y == 1){
-				newY == -2^63;
-			} else if ((p.y == -2^63) && delta.y == -1){
-				newY == 2^63 - 1;
+			if (p.y == LLONG_MAX && delta.y == 1){
+				cout<<"HELP";
+				newY == LLONG_MIN;
+			} else if (p.y == LLONG_MIN && delta.y == -1){
+				newY == LLONG_MAX;
 			} else {
 				newY = p.y + delta.y;
 			}
-			
+			cout << newX << " " << newY <<"\n";
 			neighbors.insert(Point(newX, newY));
 		}
 		return neighbors;
@@ -192,12 +195,15 @@ int main(int argc, char *argv[]){
 			should produce the next changelist etc.
 	*/
 	Gameboard * testGameboard = new Gameboard();
-	testGameboard->toggleBit(Point(1, 2), ON);
-	testGameboard->toggleBit(Point(2, 2), ON);
-	testGameboard->toggleBit(Point(3, 2), ON);
-	testGameboard->toggleBit(Point(3, 2), OFF);
-	testGameboard->toggleBit(Point(2, 2), OFF);
-	testGameboard->toggleBit(Point(1, 2), OFF);
+	// testGameboard->toggleBit(Point(1, 2), ON);
+	// testGameboard->toggleBit(Point(2, 2), ON);
+	// testGameboard->toggleBit(Point(3, 2), ON);
+	// testGameboard->toggleBit(Point(3, 2), OFF);
+	// testGameboard->toggleBit(Point(2, 2), OFF);
+	// testGameboard->toggleBit(Point(1, 2), OFF);
+
+	testGameboard->toggleBit(Point(LLONG_MAX, LLONG_MAX), ON);
+	//testGameboard->toggleBit(Point(LLONG_MIN, LLONG_MIN), ON);
 	std::cout << "My neighbors look like: \n";
 	for(const auto& neighbor: testGameboard->neighborCount){
 		Point point = neighbor.first;
