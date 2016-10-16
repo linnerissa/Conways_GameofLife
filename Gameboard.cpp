@@ -1,6 +1,57 @@
+#include <iostream>
 #include <stdint.h>
+#include <boost/functional/hash_fwd.hpp> 
+#include <unordered_map>
+
 
 using namespace std;
+
+class Point{
+	public:
+  		std::int64_t x;
+  		std::int64_t y;
+
+		Point(): x(0), y(0) {}
+		Point(int x, int y) : x(x), y(y) {}
+
+	bool operator==(Point const& other) const{ 
+		return (x == other.x && y == other.y);
+	}
+
+
+
+ //  friend std::size_t hash_value(Point const& p){
+	// std::size_t seed = 0;
+	// boost::hash_combine(seed, p.x);
+	// boost::hash_combine(seed, p.y);
+	// return seed;
+ //  }
+};
+
+namespace std {
+
+  	template <>
+  	struct hash<Point>{
+	  	std::size_t operator()(const Point& p) const{
+	    	std::size_t seed = std::hash<long long>{}(p.x);
+	      	//boost::hash_combine(seed, p.y);
+	      	return std::hash<long long>{}(p.y) + 0x9e3779b9 + (seed <<6) + (seed >>2);
+	      	//return seed;
+	    }
+	};
+};	
+
+// }
+// struct PointHash
+// {
+//     std::size_t operator()(Point const& p) const 
+//     {
+//         std::size_t seed = 0;
+//         boost::hash_combine(seed, p.x);
+//         boost::hash_combine(seed, p.y);
+//         return seed
+//     }
+// };
 
 class Gameboard{
 	//All coordinates must be listed as int64_t
@@ -45,9 +96,24 @@ int main(int argc, char *argv[]){
 		nextstate()
 			iterate through next state lists and turn the off pixels off and on pixels on
 			should produce the next changelist etc.
-			can insert graphics stage here to print all the currently on pixels
 	*/
+	std::unordered_map<Point, int> testmap;
+	testmap.emplace(Point(1,2), 3000);
+	testmap.emplace(Point(10000, 20000), 60);
 
-   return 0;
+	if (testmap.find(Point(3, 4)) != testmap.end()){
+		std::cout << "Failed1";	
+	}
+
+	if (testmap.at(Point(1, 2)) != 3000){
+		std::cout << "Failed2";	
+	}
+
+	if (testmap.at(Point(10000, 20000)) != 60){
+		std::cout << "Failed3";
+	}
+
+	std::cout<<"Success";
+	return 0;
 }
 
