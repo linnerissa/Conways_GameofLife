@@ -1,8 +1,11 @@
 #define BOOST_TEST_MODULE Testsuite
 #include <boost/test/unit_test.hpp>
+#include "Gameboard.cpp"
+#define ON 1
+
 
 BOOST_AUTO_TEST_CASE(simple_test) {
-  BOOST_CHECK_EQUAL(2+2, 4);
+  Gameboard * testgame = new Gameboard();
+  testgame->toggleBit(Point(1, 2), ON);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
