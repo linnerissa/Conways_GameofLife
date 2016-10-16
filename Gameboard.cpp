@@ -91,14 +91,23 @@ public:
 				//Remove from changelist and or add to changelist as off:
 				if (neighborCount.at(newP) == MAGICNUMBER){
 
-					changelist.emplace(newP, OFF);
+					if (changelist.find(newP) != changelist.end()){
+						changelist.erase(newP);
+					} else if (currentlyOn.find(newP) != currentlyOn.end()){
+						changelist[newP] = OFF;
+					} else {
+						//Should not have a case where its neither on changelist or on currentlyon
+						cout<<"ERROR\n";
+					}
+
 					neighborCount.at(newP) += action;
 
 				} else {
 					neighborCount.at(newP) += action;
 					if (neighborCount.at(newP) == 3){
 						
-						if (changelist.find(newP) != changelist.end()){
+						if (currentlyOn.find(newP) != currentlyOn.end()){
+							//IS CURRENTLY ON
 							if (changelist.at(newP) == OFF){
 								changelist.erase(newP);
 							}
@@ -106,7 +115,7 @@ public:
 
 						if (currentlyOn.find(newP) == currentlyOn.end()){
 							//not already on, need to make changes to it
-							changelist.emplace(newP, ON);
+							changelist[newP] =  ON;
 						}
 
 					} else if (neighborCount.at(newP) == 0){
@@ -117,10 +126,18 @@ public:
 			} else {
 				//Doesnt exist in neighborCount yet:
 				assert(action != OFF);
-				neighborCount.emplace(newP, 1);
+				neighborCount[newP] = 1;
 			}
 		}
-		currentlyOn.emplace(p);
+
+		if (action == ON){
+			assert(currentlyOn.find(p) == currentlyOn.end());
+			currentlyOn.insert(p);
+		} else {
+			assert(action == OFF);
+			assert(currentlyOn.find(p) != currentlyOn.end());
+			currentlyOn.erase(p);
+		}
 	}
 
 	/*Function Neighbors(Coord):
@@ -128,6 +145,32 @@ public:
 		Ex(should I need to round the corner, neighbors will return 
 		the coord of the box at the otherside)
 	*/
+	std::unordered_set<Point> neighbors(Point p){
+
+		std::unordered_set<Point>neighbors;
+		int64_t newX, newY;
+
+		for (const Point& delta: deltaNeighbors){
+			if (p.x == (2^63 - 1) && delta.x == 1){
+				newX = -2^63;
+			} else if ((p.x == -2^63) and delta.x == -1){
+				newX = 2^63 - 1;
+			} else {
+				newX = p.x + delta.x;
+			}
+
+			if (p.y == (2^63 - 1) && delta.y == 1){
+				newY == -2^63;
+			} else if ((p.y == -2^63) && delta.y == -1){
+				newY == 2^63 - 1;
+			} else {
+				newY = p.y + delta.y;
+			}
+			
+			neighbors.insert(Point(newX, newY));
+		}
+		return neighbors;
+	}
 	
 	/*Functon NextState()
 		Should take all the changelist items, copy it into a local copy to iterate through
@@ -152,6 +195,9 @@ int main(int argc, char *argv[]){
 	testGameboard->toggleBit(Point(1, 2), ON);
 	testGameboard->toggleBit(Point(2, 2), ON);
 	testGameboard->toggleBit(Point(3, 2), ON);
+	testGameboard->toggleBit(Point(3, 2), OFF);
+	testGameboard->toggleBit(Point(2, 2), OFF);
+	testGameboard->toggleBit(Point(1, 2), OFF);
 	std::cout << "My neighbors look like: \n";
 	for(const auto& neighbor: testGameboard->neighborCount){
 		Point point = neighbor.first;
