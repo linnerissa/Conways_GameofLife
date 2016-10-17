@@ -91,9 +91,10 @@ class Gameboard{
 
 					if (changelist.find(newPoint) != changelist.end()){
 						changelist.erase(newPoint);
-					} else if (currentlyOn.find(newPoint) != currentlyOn.end()){
-						changelist[newPoint] = OFF;
-					} 
+					} //DO NOT TAKE CARE OF CURRENTLY ON ELEMENTS, they will take care of themselves
+					// } else if (currentlyOn.find(newPoint) != currentlyOn.end()){
+					// 	changelist[newPoint] = OFF;
+					// } 
 					//else {
 						//This is the case where the changelist is empty because we are toggling bits to match the new state, 
 						//If we toggle off a bit, we cant just remove the bits that are neighboring and need to be toggled on
@@ -185,7 +186,7 @@ class Gameboard{
 		cout<<"DEBUGGING"<<endl;
 		cout<<changelist.size()<<endl;
 		for (const Point& on: currentlyOn){
-			if (neighborCount[on] != 3){
+			if (neighborCount[on] != 3 && neighborCount[on] != 2){
 				changelist[on] = OFF;
 			}
 		}
