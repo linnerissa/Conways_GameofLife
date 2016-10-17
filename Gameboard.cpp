@@ -78,66 +78,92 @@ class Gameboard{
 		add it to currently on coordinate list(or remove it)
 	*/
 	private:
-	int toggleBit(Point p, int action){
+	int toggleBit(Point p, int action, std::unordered_map<Point, int> localCL){
 		//Remeber to do boundary checking on the x and y's for overflow
 		std::unordered_set<Point> neighborPoints = neighbors(p);
 		for (const Point& newPoint: neighborPoints) {
 			int64_t newX = newPoint.x;
 			int64_t newY = newPoint.y;
-			
+
+			//cout<<newX << ',' << newY<<endl;
 			if (neighborCount.find(newPoint) != neighborCount.end()){
 				//Remove from changelist and or add to changelist as off:
-				if (neighborCount.at(newPoint) == MAGICNUMBER){
-
+				//std::unordered_map<Point, int>::const_iterator thing = neighborCount.find(newPoint);
+				//cout<<thing->first << " is " << thing->second<<endl;
+				//cout<< "ayy" << endl;
+				if (neighborCount[newPoint] == MAGICNUMBER){
+					//cout << "lol" << endl;
 					if (changelist.find(newPoint) != changelist.end()){
+						//cout<<"line 100"<<endl;
 						changelist.erase(newPoint);
 					} 
-
+					//cout << "lmao" << endl;
 					//else {
 						//This is the case where the changelist is empty because we are toggling bits to match the new state, 
 						//If we toggle off a bit, we cant just remove the bits that are neighboring and need to be toggled on
 						//So we can't remove it from changelist, its also not a bit that's currentlyOn since we are toggling it off
 						//Taken care of near end of this function
 					//}
-
 					neighborCount.at(newPoint) += action;
-
 				} else {
+					//cout << "harambe" << endl;
 					neighborCount.at(newPoint) += action;
+					//cout << "line 109" << endl;
 					if (neighborCount.at(newPoint) == 3){
-						
+						//cout << "line 111" << endl;
 						if (currentlyOn.find(newPoint) != currentlyOn.end()){
 							//IS CURRENTLY ON
-							if (changelist.at(newPoint) == OFF){
-								changelist.erase(newPoint);
+							//cout << "line 114" << endl;
+							if(localCL.find(newPoint) != localCL.end()){
+								if (localCL.at(newPoint) == OFF){
+									changelist[newPoint] = ON;
+									//cout<<"THIS SHOULD PRINT"<<endl;
+								}
+							}
+							if (changelist.find(newPoint) != changelist.end()){
+								if (changelist.at(newPoint) == OFF){
+									//cout << "line 116" << endl;
+									changelist.erase(newPoint);
+								}
 							}
 						}
-
+						//cout << "line 120" << endl;
 						if (currentlyOn.find(newPoint) == currentlyOn.end()){
-							//not already on, need to make changes to it
-							changelist[newPoint] =  ON;
+							//not already on
+							if (localCL.find(newPoint) != localCL.end()){
+								//about to make changes to it
+								if (localCL.at(newPoint) == OFF){
+									changelist[newPoint] = ON;
+								}
+							} else {
+								changelist[newPoint] = ON;
+							}
+
+							//cout << "line 123" << endl;
+							//changelist[newPoint] =  ON;
 						}
 
 					} else if (neighborCount.at(newPoint) == 0){
 						neighborCount.erase(newPoint);
 					}
 				}
-
 			} else {
 				//Doesnt exist in neighborCount yet:
 				assert(action != OFF);
 				neighborCount[newPoint] = 1;
 			}
-		}
 
+		}
 		if (action == ON){
-			assert(currentlyOn.find(p) == currentlyOn.end());
+			//assert(currentlyOn.find(p) == currentlyOn.end());
 			currentlyOn.insert(p);
 		} else {
-			assert(action == OFF);
-			assert(currentlyOn.find(p) != currentlyOn.end());
+			//assert(action == OFF);
+			//assert(currentlyOn.find(p) != currentlyOn.end());
 			currentlyOn.erase(p);
 		}
+
+
 	}
 
 	/*Function Neighbors(Coord):
@@ -181,20 +207,24 @@ class Gameboard{
 	*/
 	public:
 	void nextState(){
+		//cout<<"First"<<changelist.size()<<endl;
 		for (const Point& on: currentlyOn){
 			if (neighborCount[on] != 3 && neighborCount[on] != 2){
 				changelist[on] = OFF;
 			}
 		}
 		std::unordered_map<Point, int> localCopy = changelist;
-		changelist.clear();
+		//cout<<"Second"<<changelist.size()<<endl;
 
+		changelist.clear();
+		//cout<<localCopy.size();
 		for (const auto& change: localCopy){
 			Point point = change.first;
 			int action = change.second;
-			toggleBit(point, action);
+
+			//cout<<"Toggling"<<action<<": "<< point.x << "," << point.y <<endl;
+			toggleBit(point, action, localCopy);
 		}
-			
 
 		for (const Point& on: currentlyOn){
 			cout << on.x << "," << on.y << endl;
