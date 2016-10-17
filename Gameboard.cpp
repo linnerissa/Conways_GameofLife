@@ -91,10 +91,8 @@ class Gameboard{
 
 					if (changelist.find(newPoint) != changelist.end()){
 						changelist.erase(newPoint);
-					} //DO NOT TAKE CARE OF CURRENTLY ON ELEMENTS, they will take care of themselves
-					// } else if (currentlyOn.find(newPoint) != currentlyOn.end()){
-					// 	changelist[newPoint] = OFF;
-					// } 
+					} 
+
 					//else {
 						//This is the case where the changelist is empty because we are toggling bits to match the new state, 
 						//If we toggle off a bit, we cant just remove the bits that are neighboring and need to be toggled on
@@ -183,21 +181,17 @@ class Gameboard{
 	*/
 	public:
 	void nextState(){
-		cout<<"DEBUGGING"<<endl;
-		cout<<changelist.size()<<endl;
 		for (const Point& on: currentlyOn){
 			if (neighborCount[on] != 3 && neighborCount[on] != 2){
 				changelist[on] = OFF;
 			}
 		}
-		cout<<changelist.size()<<endl;
 		std::unordered_map<Point, int> localCopy = changelist;
 		changelist.clear();
 
 		for (const auto& change: localCopy){
 			Point point = change.first;
 			int action = change.second;
-			//cout<<"NextState"<<endl;
 			toggleBit(point, action);
 		}
 			
@@ -220,15 +214,30 @@ int main(int argc, char *argv[]){
 			should produce the next changelist etc.
 	*/
 
-	assert(argc > 1);
-	char tmp;
-	int n = -1;
-	// while(tmp = getopt(argc, argv, ":k") != -1){
-	// 	int n = stoi(optarg);
-	// } 
+	if (argc < 2){
+		cout<<"Not enough arguments, require an integer, then following with points x,y that are starting points" <<endl;
+		return 0;
+	}
+	int n;
+	try{
+		std::string str = argv[1];
+		if (str.find_first_not_of("0123456789-") != std::string::npos){
+			cout<< "Second argument must be number of iterations or -1 if infinite" << endl;
+			return 0;
+		}
+
+		n = stoi(str);
+		if (n != -1 && n < 0){
+			cout<< "Second argument must be number of iterations or -1 if infinite" << endl;
+			return 0;
+		}
+	} catch (int e) {
+		cout<< "Second argument must be an integer (number of stages) or -1 for infinite" <<endl;
+		return 0;
+	}
 
 	std::unordered_set<Point> input; 
-	for (int i = 1; i < argc; i++){
+	for (int i = 2; i < argc; i++){
 		std::string s = argv[i];
 		std::string delimiter = ",";
 
@@ -249,17 +258,14 @@ int main(int argc, char *argv[]){
 	Gameboard* game = new Gameboard(input);
 
 	if (n == -1){
-		// while (1){
-		// 	game->nextState();
-		// }
-		cout<<"State 1" << endl;
-		game->nextState();
-		cout<<"State 2" << endl;
-		game->nextState();
-		cout<<"State 3" << endl;
-		game->nextState();
+		while (1){
+			cout<<"Next State" <<endl;
+			game->nextState();
+		}
+
 	} else {
 		for (int i = 0; i < n; i++){
+			cout<<"State " << i + 1<<endl;
 			game->nextState();
 		}
 	}
