@@ -88,16 +88,11 @@ class Gameboard{
 			//cout<<newX << ',' << newY<<endl;
 			if (neighborCount.find(newPoint) != neighborCount.end()){
 				//Remove from changelist and or add to changelist as off:
-				//std::unordered_map<Point, int>::const_iterator thing = neighborCount.find(newPoint);
-				//cout<<thing->first << " is " << thing->second<<endl;
-				//cout<< "ayy" << endl;
+				
 				if (neighborCount[newPoint] == MAGICNUMBER){
-					//cout << "lol" << endl;
 					if (changelist.find(newPoint) != changelist.end()){
-						//cout<<"line 100"<<endl;
 						changelist.erase(newPoint);
 					} 
-					//cout << "lmao" << endl;
 					//else {
 						//This is the case where the changelist is empty because we are toggling bits to match the new state, 
 						//If we toggle off a bit, we cant just remove the bits that are neighboring and need to be toggled on
@@ -106,28 +101,23 @@ class Gameboard{
 					//}
 					neighborCount.at(newPoint) += action;
 				} else {
-					//cout << "harambe" << endl;
 					neighborCount.at(newPoint) += action;
-					//cout << "line 109" << endl;
 					if (neighborCount.at(newPoint) == 3){
-						//cout << "line 111" << endl;
 						if (currentlyOn.find(newPoint) != currentlyOn.end()){
-							//IS CURRENTLY ON
-							//cout << "line 114" << endl;
+							//is currently on but about to turn it off later this update
 							if(localCL.find(newPoint) != localCL.end()){
 								if (localCL.at(newPoint) == OFF){
+									//We want it back on for next update
 									changelist[newPoint] = ON;
-									//cout<<"THIS SHOULD PRINT"<<endl;
 								}
 							}
+
 							if (changelist.find(newPoint) != changelist.end()){
 								if (changelist.at(newPoint) == OFF){
-									//cout << "line 116" << endl;
 									changelist.erase(newPoint);
 								}
 							}
 						}
-						//cout << "line 120" << endl;
 						if (currentlyOn.find(newPoint) == currentlyOn.end()){
 							//not already on
 							if (localCL.find(newPoint) != localCL.end()){
@@ -139,8 +129,6 @@ class Gameboard{
 								changelist[newPoint] = ON;
 							}
 
-							//cout << "line 123" << endl;
-							//changelist[newPoint] =  ON;
 						}
 
 					} else if (neighborCount.at(newPoint) == 0){
@@ -155,11 +143,8 @@ class Gameboard{
 
 		}
 		if (action == ON){
-			//assert(currentlyOn.find(p) == currentlyOn.end());
 			currentlyOn.insert(p);
 		} else {
-			//assert(action == OFF);
-			//assert(currentlyOn.find(p) != currentlyOn.end());
 			currentlyOn.erase(p);
 		}
 
@@ -207,22 +192,18 @@ class Gameboard{
 	*/
 	public:
 	void nextState(){
-		//cout<<"First"<<changelist.size()<<endl;
 		for (const Point& on: currentlyOn){
 			if (neighborCount[on] != 3 && neighborCount[on] != 2){
 				changelist[on] = OFF;
 			}
 		}
 		std::unordered_map<Point, int> localCopy = changelist;
-		//cout<<"Second"<<changelist.size()<<endl;
 
 		changelist.clear();
-		//cout<<localCopy.size();
 		for (const auto& change: localCopy){
 			Point point = change.first;
 			int action = change.second;
 
-			//cout<<"Toggling"<<action<<": "<< point.x << "," << point.y <<endl;
 			toggleBit(point, action, localCopy);
 		}
 
