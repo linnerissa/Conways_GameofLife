@@ -200,6 +200,11 @@ class Gameboard{
 			cout << on.x << "," << on.y << endl;
 		}
 	}
+
+	public:
+	std::unordered_set<Point> getCurrentlyOn(){
+		return currentlyOn;
+	}
 };
 
 
