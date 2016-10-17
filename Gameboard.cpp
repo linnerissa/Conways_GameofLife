@@ -181,6 +181,22 @@ public:
 			update as necessary(ie delete from "on list" and decrement neighbors or turn on neighbors
 	*/
 
+	void nextState(){
+		std::unordered_map<Point, int> localCopy = changelist;
+		changelist.clear();
+
+		for (const auto& change: changelist){
+			Point point = change.first;
+			int action = change.second;
+			toggleBit(point, action);
+		}
+		for (const Point& on: currentlyOn){
+			if (neighborCount[on] != 3){
+				changelist[on] = OFF;
+			}
+		}
+	}
+
 
 };
 
@@ -194,15 +210,15 @@ int main(int argc, char *argv[]){
 			should produce the next changelist etc.
 	*/
 	Gameboard * testGameboard = new Gameboard();
-	// testGameboard->toggleBit(Point(1, 2), ON);
-	// testGameboard->toggleBit(Point(2, 2), ON);
-	// testGameboard->toggleBit(Point(3, 2), ON);
+	testGameboard->toggleBit(Point(1, 2), ON);
+	testGameboard->toggleBit(Point(2, 2), ON);
+	testGameboard->toggleBit(Point(3, 2), ON);
 	// testGameboard->toggleBit(Point(3, 2), OFF);
 	// testGameboard->toggleBit(Point(2, 2), OFF);
 	// testGameboard->toggleBit(Point(1, 2), OFF);
 
-	testGameboard->toggleBit(Point(LLONG_MAX, LLONG_MAX), ON);
-	testGameboard->toggleBit(Point(LLONG_MIN, LLONG_MIN), ON);
+	// testGameboard->toggleBit(Point(LLONG_MAX, LLONG_MAX), ON);
+	// testGameboard->toggleBit(Point(LLONG_MIN, LLONG_MIN), ON);
 	std::cout << "My neighbors look like: \n";
 	for(const auto& neighbor: testGameboard->neighborCount){
 		Point point = neighbor.first;
@@ -226,5 +242,7 @@ int main(int argc, char *argv[]){
 		int action = change.second;
 		std::cout << point.x <<"," << point.y << "      " << action<<"\n";
 	}
+
+	testGameboard->nextState();
 }
 
