@@ -272,9 +272,9 @@ int main(int argc, char *argv[]){
 	}
 	
 	Gameboard* game = new Gameboard(input);
-
+	int c;
 	if (n == -1){
-		while (1){
+		while (c = getchar()){
 			cout<<"Next State" <<endl;
 			game->nextState();
 		}
