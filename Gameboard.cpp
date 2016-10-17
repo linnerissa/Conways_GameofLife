@@ -5,8 +5,11 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 #include <math.h>
 #include <limits.h>
+#include <sstream>
+
 
 using namespace std;
 
@@ -51,7 +54,14 @@ class Gameboard{
 				*Holds the next state's changes that need to be made
 				*1 is on, -1 is off
 	*/
-public:
+	public:
+	Gameboard(std::unordered_set<Point> startingPoints){
+		for (const Point& point: startingPoints) {
+			changelist[point] = ON;
+		}
+	}
+
+	private:
 	std::unordered_set<Point> currentlyOn;
 	std::unordered_map<Point, int> neighborCount;
 	std::unordered_map<Point, int> changelist;
@@ -61,27 +71,13 @@ public:
 		Point(-1, 0), Point(1, 0),
 		Point(-1, 1), Point(0, 1), Point(1, 1)};
 
-	int currentlyOnSetter(std::unordered_set<Point> x){
-		currentlyOn = x;
-		return 0;
-	}
-
-	int neighborCountSetter(std::unordered_map<Point, int> x){
-		neighborCount = x;
-		return 0;
-	}
-
-	int changelistSetter(std::unordered_map<Point, int> x){
-		changelist = x;
-		return 0;
-	}
-
 
 	/*Function ToggleBit(Coord, Off/On):
 		takes a coordnate and turns its neighbors on or off
 			add any "Changed state" neighbors into the changelist
 		add it to currently on coordinate list(or remove it)
 	*/
+	private:
 	int toggleBit(Point p, int action){
 		//Remeber to do boundary checking on the x and y's for overflow
 		std::unordered_set<Point> neighborPoints = neighbors(p);
@@ -97,10 +93,13 @@ public:
 						changelist.erase(newPoint);
 					} else if (currentlyOn.find(newPoint) != currentlyOn.end()){
 						changelist[newPoint] = OFF;
-					} else {
-						//Should not have a case where its neither on changelist or on currentlyon
-						cout<<"ERROR\n";
-					}
+					} 
+					//else {
+						//This is the case where the changelist is empty because we are toggling bits to match the new state, 
+						//If we toggle off a bit, we cant just remove the bits that are neighboring and need to be toggled on
+						//So we can't remove it from changelist, its also not a bit that's currentlyOn since we are toggling it off
+						//Taken care of near end of this function
+					//}
 
 					neighborCount.at(newPoint) += action;
 
@@ -147,6 +146,7 @@ public:
 		Ex(should I need to round the corner, neighbors will return 
 		the coord of the box at the otherside)
 	*/
+	private:
 	std::unordered_set<Point> neighbors(Point p){
 
 		std::unordered_set<Point>neighbors;
@@ -180,25 +180,34 @@ public:
 		for each item in changelist:
 			update as necessary(ie delete from "on list" and decrement neighbors or turn on neighbors
 	*/
-
+	public:
 	void nextState(){
-		std::unordered_map<Point, int> localCopy = changelist;
-		changelist.clear();
-
-		for (const auto& change: changelist){
-			Point point = change.first;
-			int action = change.second;
-			toggleBit(point, action);
-		}
+		cout<<"DEBUGGING"<<endl;
+		cout<<changelist.size()<<endl;
 		for (const Point& on: currentlyOn){
 			if (neighborCount[on] != 3){
 				changelist[on] = OFF;
 			}
 		}
+		cout<<changelist.size()<<endl;
+		std::unordered_map<Point, int> localCopy = changelist;
+		changelist.clear();
+
+		for (const auto& change: localCopy){
+			Point point = change.first;
+			int action = change.second;
+			//cout<<"NextState"<<endl;
+			toggleBit(point, action);
+		}
+			
+
+		for (const Point& on: currentlyOn){
+			cout << on.x << "," << on.y << endl;
+		}
 	}
-
-
 };
+
+
 
 int main(int argc, char *argv[]){
 	/* flow of main should look like:
@@ -209,40 +218,49 @@ int main(int argc, char *argv[]){
 			iterate through next state lists and turn the off pixels off and on pixels on
 			should produce the next changelist etc.
 	*/
-	Gameboard * testGameboard = new Gameboard();
-	testGameboard->toggleBit(Point(1, 2), ON);
-	testGameboard->toggleBit(Point(2, 2), ON);
-	testGameboard->toggleBit(Point(3, 2), ON);
-	// testGameboard->toggleBit(Point(3, 2), OFF);
-	// testGameboard->toggleBit(Point(2, 2), OFF);
-	// testGameboard->toggleBit(Point(1, 2), OFF);
 
-	// testGameboard->toggleBit(Point(LLONG_MAX, LLONG_MAX), ON);
-	// testGameboard->toggleBit(Point(LLONG_MIN, LLONG_MIN), ON);
-	std::cout << "My neighbors look like: \n";
-	for(const auto& neighbor: testGameboard->neighborCount){
-		Point point = neighbor.first;
-		int count = neighbor.second;
-		std::cout << point.x;
-		std::cout << ",";
-		std::cout << point.y;
-		std::cout << "     ";
-		std::cout << count;
-		std::cout <<"\n";
+	assert(argc > 1);
+	char tmp;
+	int n = -1;
+	// while(tmp = getopt(argc, argv, ":k") != -1){
+	// 	int n = stoi(optarg);
+	// } 
+
+	std::unordered_set<Point> input; 
+	for (int i = 1; i < argc; i++){
+		std::string s = argv[i];
+		std::string delimiter = ",";
+
+		size_t pos = 0;
+		std::string token;
+		int64_t x, y;
+		while((pos = s.find(delimiter)) != std::string::npos) {
+			token = s.substr(0, pos);
+			x = stoll(token);
+			s.erase(0, pos + delimiter.length());
+		}
+		y = stoll(s);
+
+		Point newPoint = Point(x, y);
+		input.emplace(newPoint);
 	}
+	
+	Gameboard* game = new Gameboard(input);
 
-	std::cout << "Currently on includes: \n";
-	for(const auto& on: testGameboard->currentlyOn){
-		std::cout<<on.x << "," << on.y <<"\n";
+	if (n == -1){
+		// while (1){
+		// 	game->nextState();
+		// }
+		cout<<"State 1" << endl;
+		game->nextState();
+		cout<<"State 2" << endl;
+		game->nextState();
+		cout<<"State 3" << endl;
+		game->nextState();
+	} else {
+		for (int i = 0; i < n; i++){
+			game->nextState();
+		}
 	}
-
-	std::cout<< "Changelist looks like: \n";
-	for(const auto& change: testGameboard->changelist){
-		Point point = change.first;
-		int action = change.second;
-		std::cout << point.x <<"," << point.y << "      " << action<<"\n";
-	}
-
-	testGameboard->nextState();
 }
 
